@@ -1,44 +1,76 @@
 const express = require('express');
+const Contact = require('../models/contact');
+
 const contactRouter = express.Router();
 
 contactRouter.route('/')
-.all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next();
+.get((req, res, next) => {
+    Contact.find()
+    .then(contacts => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(contacts);
+    })
+    .catch(err => next(err));
 })
-.get((req, res) => {
-    res.end('Will send all the contacts to you');
-})
-.post((req, res) => {
-    res.end(`Will add the contact: ${req.body.name} with description: ${req.body.description}`);
+.post((req, res, next) => {
+    Contact.create(req.body)
+    .then(contact => {
+        console.log('Contact Created ', contact);
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(contact);
+    })
+    .catch(err => next(err));
 })
 .put((req, res) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /contacts');
 })
-.delete((req, res) => {
-    res.end('Deleting all contacts');
+.delete((req, res, next) => {
+    Contact.deleteMany()
+    .then(response => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(response);
+    })
+    .catch(err => next(err));
 });
 
 contactRouter.route('/:contactId')
-.all((req,res,next)=>{
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next();
+.get((req, res, next) => {
+    Contact.findById(req.params.contactId)
+    .then(contact => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(contact);
+    })
+    .catch(err => next(err));
 })
-.get((req,res)=>{
-    res.end('Will send the contact to you');
-})
-.post((req,res)=>{
+.post((req, res) => {
     res.statusCode = 403;
-    res.end(`POST operation not supported on /contacts/:contactId`);
+    res.end(`POST operation not supported on /contacts/${req.params.contactId}`);
 })
-.put((req,res)=>{
-    res.end(`Updating the contact ${req.params['partnerId']}Will update the contact description: ${req.body.description}`); 
+.put((req, res, next) => {
+    Contact.findByIdAndUpdate(req.params.contactId, {
+        $set: req.body
+    }, { new: true })
+    .then(contact => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(contact);
+    })
+    .catch(err => next(err));
 })
-.delete((req, res)=>{
-    res.end('Deleting contact by Id');
-})
+.delete((req, res, next) => {
+    Contact.findByIdAndDelete(req.params.contactId)
+    .then(response => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(response);
+    })
+    .catch(err => next(err));
+});
+
 
 module.exports = contactRouter;
