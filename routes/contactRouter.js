@@ -1,5 +1,6 @@
 const express = require('express');
 const Contact = require('../models/contact');
+const authenticate = require('../authenticate');
 
 const contactRouter = express.Router();
 
@@ -13,7 +14,7 @@ contactRouter.route('/')
     })
     .catch(err => next(err));
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     Contact.create(req.body)
     .then(contact => {
         console.log('Contact Created ', contact);
@@ -23,11 +24,11 @@ contactRouter.route('/')
     })
     .catch(err => next(err));
 })
-.put((req, res) => {
+.put(authenticate.verifyUser,(req, res) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /contacts');
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser,(req, res, next) => {
     Contact.deleteMany()
     .then(response => {
         res.statusCode = 200;
@@ -47,11 +48,11 @@ contactRouter.route('/:contactId')
     })
     .catch(err => next(err));
 })
-.post((req, res) => {
+.post(authenticate.verifyUser,(req, res) => {
     res.statusCode = 403;
     res.end(`POST operation not supported on /contacts/${req.params.contactId}`);
 })
-.put((req, res, next) => {
+.put(authenticate.verifyUser,(req, res, next) => {
     Contact.findByIdAndUpdate(req.params.contactId, {
         $set: req.body
     }, { new: true })
@@ -62,7 +63,7 @@ contactRouter.route('/:contactId')
     })
     .catch(err => next(err));
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser,(req, res, next) => {
     Contact.findByIdAndDelete(req.params.contactId)
     .then(response => {
         res.statusCode = 200;
